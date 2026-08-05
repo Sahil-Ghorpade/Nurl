@@ -17,4 +17,15 @@ public final class ResponseFactory {
 				Instant.now()
 		);
 	}
+
+	public static ApiResponse<Void> failure(
+			String message
+	) {
+		return new ApiResponse<>(
+				false,
+				message,
+				null,
+				Instant.now()
+		);
+	}
 }
