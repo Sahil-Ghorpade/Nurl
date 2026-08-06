@@ -56,6 +56,15 @@ public class GlobalExceptionHandler {
 				.body(ResponseFactory.failure(exception.getMessage()));
 	}
 
+	@ExceptionHandler(ShortCodeGenerationException.class)
+	public ResponseEntity<ApiResponse<Void>> handleShortCodeGenerationException(
+			ShortCodeGenerationException exception
+	) {
+		return ResponseEntity
+				.status(HttpStatus.CONFLICT)
+				.body(ResponseFactory.failure("Unable to generate unique short code."));
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(
 			MethodArgumentNotValidException exception

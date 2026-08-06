@@ -1,0 +1,101 @@
+package io.github.sahilghorpade.nurl.link.controller;
+
+import io.github.sahilghorpade.nurl.auth.security.UserPrincipal;
+import io.github.sahilghorpade.nurl.common.response.ApiResponse;
+import io.github.sahilghorpade.nurl.common.response.ResponseFactory;
+import io.github.sahilghorpade.nurl.link.dto.request.CreateLinkRequest;
+import io.github.sahilghorpade.nurl.link.dto.response.LinkResponse;
+import io.github.sahilghorpade.nurl.link.entity.Link;
+import io.github.sahilghorpade.nurl.link.service.LinkService;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+import java.util.List;
+
+@RestController
+public class LinkController {
+
+	private final LinkService linkService;
+
+	public LinkController(LinkService linkService) {
+		this.linkService = linkService;
+	}
+
+	@PostMapping("/link")
+	public ResponseEntity<ApiResponse<LinkResponse>> createLink(
+			@Valid
+			@RequestBody
+			CreateLinkRequest request
+	) {
+		LinkResponse response = linkService.createLink(request);
+
+		return ResponseEntity
+				.status(HttpStatus.CREATED)
+				.body(ResponseFactory.success(
+						"Short URL created successfully",
+						response
+				));
+	}
+
+	@GetMapping("/{shortCode}")
+	public ResponseEntity<Void> redirectLink(
+			@PathVariable
+			String shortCode
+	) {
+		String originalUrl = linkService.redirctLink(shortCode);
+
+		return ResponseEntity
+				.status(HttpStatus.FOUND)
+				.location(URI.create(originalUrl))
+				.build();
+	}
+
+	@GetMapping("link/{id}")
+	public ResponseEntity<ApiResponse<LinkResponse>> getAnalysis(
+			@PathVariable
+			Long id,
+			@AuthenticationPrincipal UserPrincipal principal
+	) {
+		LinkResponse response =
+				linkService.getAnalytics(id, principal);
+
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(ResponseFactory.success(
+						"Link retrieved successfully",
+						response
+				));
+	}
+
+	@GetMapping("/links")
+	public ResponseEntity<ApiResponse<Page<LinkResponse>>> getLinks(
+			@PageableDefault(
+					size = 10,
+					sort = "createdAt",
+					direction = Sort.Direction.DESC
+			)
+			Pageable pageable,
+
+			@AuthenticationPrincipal
+			UserPrincipal principal
+	) {
+		Page<LinkResponse>  response =
+				linkService.getLinks(pageable, principal);
+
+		return ResponseEntity
+				.status(HttpStatus.FOUND)
+				.body(ResponseFactory.success(
+						"Links retrieved successfully",
+						response
+				));
+	}
+}

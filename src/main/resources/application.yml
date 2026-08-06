@@ -30,3 +30,6 @@ logging:
 jwt:
   secret: 7QeP3mL8ZxA1Vn5Kd9RwY2Ht6BcF4NsJ8QmX7LpE2ZvC5Tr
   access-token-expiration: 900000
+
+app:
+  base-url: https://localhost:8080
