@@ -26,3 +26,7 @@ server:
 logging:
   level:
     org.springframework.jdbc: INFO
+
+jwt:
+  secret: 7QeP3mL8ZxA1Vn5Kd9RwY2Ht6BcF4NsJ8QmX7LpE2ZvC5Tr
+  access-token-expiration: 900000
