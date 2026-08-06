@@ -8,12 +8,17 @@ spring:
     password: root
 
   jpa:
-    show-sql: false
+    show-sql: true
 
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
 
     open-in-view: false
+
+    properties:
+      hibernate:
+        format_sql: true
+        highlight_sql: true
 
 server:
   port: 8080
