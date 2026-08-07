@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.URL;
 
+import java.time.Instant;
+
 public record CreateLinkRequest(
 
 		@NotBlank(message = "URL is required")
@@ -20,6 +22,8 @@ public record CreateLinkRequest(
 				regexp = "^[A-Za-z0-9_-]+$",
 				message = "Alias can only contain letters, numbers, hyphens (-), and underscores (_)"
 		)
-		String alias
+		String alias,
+
+		Instant expiresAt
 ) {
 }

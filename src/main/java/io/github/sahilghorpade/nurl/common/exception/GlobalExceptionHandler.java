@@ -65,6 +65,15 @@ public class GlobalExceptionHandler {
 				.body(ResponseFactory.failure("Unable to generate unique short code."));
 	}
 
+	@ExceptionHandler(LinkExpiredException.class)
+	public ResponseEntity<ApiResponse<Void>> handleLinkExpiredException(
+			LinkExpiredException exception
+	) {
+		return ResponseEntity
+				.status(HttpStatus.GONE)
+				.body(ResponseFactory.failure(exception.getMessage()));
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(
 			MethodArgumentNotValidException exception

@@ -38,6 +38,15 @@ public class Link {
 	)
 	private long clickCount;
 
+	@Column
+	private Instant expiresAt;
+
+	@Column(nullable = false)
+	private boolean deleted = false;
+
+	@Column
+	private Instant deletedAt;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(
 			name = "user_id",
@@ -71,6 +80,21 @@ public class Link {
 
 	public void increaseClickCount() {
 		this.clickCount++;
+	}
+
+	public boolean isExpired() {
+		return expiresAt != null &&
+				Instant.now().isAfter(expiresAt);
+	}
+
+	public void delete() {
+		this.deleted = true;
+		this.deletedAt = Instant.now();
+	}
+
+	public void restore() {
+		this.deleted = false;
+		this.deletedAt = null;
 	}
 
 	public void assignUser(User user) {

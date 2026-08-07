@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Set;
 
 @Service
@@ -91,6 +92,11 @@ public class LinkService {
 			UserPrincipal principal
 	) {
 
+		if (request.expiresAt() != null &&
+				!request.expiresAt().isAfter(Instant.now())) {
+			throw new BadRequestException("Expiration time must be in the future.");
+		}
+
 		String shortCode = resolveShortCode(request);
 
 		Link link = linkMapper.toEntity(request);
@@ -107,11 +113,17 @@ public class LinkService {
 	public String redirectLink(String shortCode) {
 
 		Link link = linkRepository
-				.findByShortCode(shortCode)
+				.findByShortCodeAndDeletedFalse(shortCode)
 				.orElseThrow(() ->
 						new ResourceNotFoundException(
 								"No such link"
 						));
+
+		if (link.isExpired()) {
+			throw new LinkExpiredException(
+					"This link is expired."
+			);
+		}
 
 		link.increaseClickCount();
 
@@ -127,7 +139,7 @@ public class LinkService {
 	) {
 
 		Link link = linkRepository
-				.findById(id)
+				.findByIdAndDeletedFalse(id)
 				.orElseThrow(() ->
 						new ResourceNotFoundException(
 								"No such link"
@@ -148,12 +160,33 @@ public class LinkService {
 			Pageable pageable,
 			UserPrincipal principal
 	) {
-		Page<Link> links = linkRepository.findByUser(
+		Page<Link> links = linkRepository.findByUserAndDeletedFalse(
 				principal.getUser(),
 				pageable
 		);
 
 		return links
 				.map(link -> linkMapper.toResponse(link, baseUrl));
+	}
+
+	@Transactional
+	public void deleteLink(
+			Long id,
+			UserPrincipal principal
+	) {
+		Link link = linkRepository
+				.findByIdAndDeletedFalse(id)
+				.orElseThrow(() ->
+					new ResourceNotFoundException("No such link"
+					)
+				);
+
+		if (!link.getUser().getId().equals(principal.getUser().getId())) {
+			throw new ForbiddenException(
+					"You are not allowed to access this resource"
+			);
+		}
+
+		link.delete();
 	}
 }

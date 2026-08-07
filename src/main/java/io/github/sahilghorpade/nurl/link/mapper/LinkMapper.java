@@ -20,12 +20,16 @@ public class LinkMapper {
 				link.getOriginalUrl(),
 				link.getShortCode(),
 				baseUrl + "/" + link.getShortCode(),
-				link.getCreatedAt()
+				link.getCreatedAt(),
+				link.getExpiresAt()
 		);
 	}
 
 	public Link toEntity(CreateLinkRequest request) {
-		return new Link(request.originalUrl());
+		Link link = new Link(request.originalUrl());
+		link.setExpiresAt(request.expiresAt());
+
+		return link;
 	}
 
 	public LinkResponse toResponse(
@@ -37,7 +41,8 @@ public class LinkMapper {
 				link.getOriginalUrl(),
 				link.getShortCode(),
 				baseUrl + "/" + link.getShortCode(),
-				link.getCreatedAt()
+				link.getCreatedAt(),
+				link.getExpiresAt()
 		);
 	}
 }

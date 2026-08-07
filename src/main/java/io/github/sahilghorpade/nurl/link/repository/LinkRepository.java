@@ -14,9 +14,13 @@ public interface LinkRepository extends JpaRepository<Link, Long> {
 
 	boolean existsByShortCode(String shortCode);
 
-	Optional<Link> findByShortCode(String shortCode);
+	Optional<Link> findByIdAndDeletedFalse(long id);
 
-	Page<Link> findByUser(
+	Optional<Link> findByShortCodeAndDeletedFalse(
+			String shortCode
+	);
+
+	Page<Link> findByUserAndDeletedFalse(
 			User user,
 			Pageable pageable
 	);

@@ -27,6 +27,7 @@ public class LinkController {
 		this.linkService = linkService;
 	}
 
+	//Create Link
 	@PostMapping("/link")
 	public ResponseEntity<ApiResponse<LinkResponse>> createLink(
 			@Valid
@@ -44,6 +45,7 @@ public class LinkController {
 				));
 	}
 
+	//Redirect to original link
 	@GetMapping("/{shortCode}")
 	public ResponseEntity<Void> redirectLink(
 			@PathVariable
@@ -57,6 +59,7 @@ public class LinkController {
 				.build();
 	}
 
+	//Analyze a link
 	@GetMapping("/link/{id}")
 	public ResponseEntity<ApiResponse<LinkResponse>> getAnalysis(
 			@PathVariable
@@ -74,6 +77,7 @@ public class LinkController {
 				));
 	}
 
+	//Get all link
 	@GetMapping("/links")
 	public ResponseEntity<ApiResponse<Page<LinkResponse>>> getLinks(
 			@PageableDefault(
@@ -95,5 +99,18 @@ public class LinkController {
 						"Links retrieved successfully",
 						response
 				));
+	}
+
+	//Soft-delete link
+	@DeleteMapping("/link/{id}")
+	public ResponseEntity<Void> deleteLink(
+			@PathVariable Long id,
+			@AuthenticationPrincipal UserPrincipal principal
+	) {
+		linkService.deleteLink(id, principal);
+
+		return ResponseEntity.
+				noContent().
+				build();
 	}
 }
