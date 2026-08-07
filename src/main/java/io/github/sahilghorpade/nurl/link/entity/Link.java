@@ -2,7 +2,9 @@ package io.github.sahilghorpade.nurl.link.entity;
 
 import io.github.sahilghorpade.nurl.user.entity.User;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
@@ -10,6 +12,8 @@ import java.time.Instant;
 @Entity
 @Table(name = "links")
 @Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Link {
 
 	@Id
@@ -67,5 +71,17 @@ public class Link {
 
 	public void increaseClickCount() {
 		this.clickCount++;
+	}
+
+	public void assignUser(User user) {
+		this.user = user;
+	}
+
+	public void changeShortCode(String shortCode) {
+		this.shortCode = shortCode;
+	}
+
+	public Link(String originalUrl) {
+		this.originalUrl = originalUrl;
 	}
 }

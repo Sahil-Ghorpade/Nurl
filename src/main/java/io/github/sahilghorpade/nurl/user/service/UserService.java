@@ -28,7 +28,7 @@ public class UserService {
 	public UserResponse register(RegisterRequest registerRequest) {
 
 		if (userRepository.existsByEmail(registerRequest.email())) {
-			throw new ConflictException("Invalid credentials.");
+			throw new ConflictException("Email already registered.");
 		}
 
 		User user = UserMapper.toEntity(registerRequest);

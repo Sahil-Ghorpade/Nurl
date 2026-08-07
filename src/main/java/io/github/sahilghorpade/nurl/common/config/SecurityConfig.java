@@ -2,8 +2,10 @@ package io.github.sahilghorpade.nurl.common.config;
 
 import io.github.sahilghorpade.nurl.auth.filter.JwtAuthenticationFilter;
 import io.github.sahilghorpade.nurl.auth.security.CustomUserDetailsService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -47,16 +49,33 @@ public class SecurityConfig {
 
 				.authorizeHttpRequests(auth -> auth
 
-						.requestMatchers(
-								"/auth/**"
-						).permitAll()
+						.requestMatchers("/auth/**")
+						.permitAll()
 
-						.requestMatchers(
-								"/health"
-						).permitAll()
+						.requestMatchers("/health")
+						.permitAll()
+
+						.requestMatchers(HttpMethod.GET,"/{shortCode}")
+						.permitAll()
 
 						.anyRequest()
 						.authenticated()
+				)
+
+				.exceptionHandling(exception -> exception
+						.authenticationEntryPoint((request, response, authException) -> {
+
+							response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+							response.setContentType("application/json");
+
+							response.getWriter().write("""
+                    {
+                        "success": false,
+                        "message": "Authentication required.",
+                        "data": null
+                    }
+                    """);
+						})
 				)
 
 				.addFilterBefore(

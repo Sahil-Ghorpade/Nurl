@@ -1,38 +1,110 @@
 package io.github.sahilghorpade.nurl.link.service;
 
 import io.github.sahilghorpade.nurl.auth.security.UserPrincipal;
-import io.github.sahilghorpade.nurl.common.exception.ForbiddenException;
-import io.github.sahilghorpade.nurl.common.exception.ResourceNotFoundException;
+import io.github.sahilghorpade.nurl.common.config.AppProperties;
+import io.github.sahilghorpade.nurl.common.exception.*;
 import io.github.sahilghorpade.nurl.link.dto.request.CreateLinkRequest;
 import io.github.sahilghorpade.nurl.link.dto.response.LinkResponse;
 import io.github.sahilghorpade.nurl.link.entity.Link;
 import io.github.sahilghorpade.nurl.link.mapper.LinkMapper;
 import io.github.sahilghorpade.nurl.link.repository.LinkRepository;
+import io.github.sahilghorpade.nurl.link.util.ShortCodeGenerator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Set;
 
 @Service
 public class LinkService {
 
 	private final LinkRepository linkRepository;
 	private final LinkMapper linkMapper;
+	private final ShortCodeGenerator shortCodeGenerator;
+
+	private final String baseUrl;
+	private final Set<String> reservedAliases;
+
+	private static final int MAX_ATTEMPTS = 5;
 
 	public LinkService(
 			LinkRepository linkRepository,
-			LinkMapper linkMapper
+			LinkMapper linkMapper,
+			ShortCodeGenerator shortCodeGenerator,
+			AppProperties appProperties
 	) {
 		this.linkRepository = linkRepository;
 		this.linkMapper = linkMapper;
+		this.shortCodeGenerator = shortCodeGenerator;
+
+		this.baseUrl = appProperties.getBaseUrl();
+		this.reservedAliases = appProperties.getReservedAliases();
+
 	}
 
-	public LinkResponse createLink(CreateLinkRequest request) {
-		return null;
+	private String resolveShortCode(CreateLinkRequest request) {
+
+		if (hasCustomAlias(request)) {
+			return validateAndUseAlias(request.alias());
+		}
+
+		return generateUniqueShortCode();
+	}
+
+	private String validateAndUseAlias(String alias) {
+
+		if (reservedAliases.contains(alias.toLowerCase())) {
+			throw new BadRequestException("Alias is reserved.");
+		}
+
+		if (linkRepository.existsByShortCode(alias)) {
+			throw new ConflictException("Alias already exists.");
+		}
+
+		return alias;
+	}
+
+	private String generateUniqueShortCode() {
+
+		for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+
+			String code = shortCodeGenerator.generate();
+
+			if (!linkRepository.existsByShortCode(code)) {
+				return code;
+			}
+		}
+
+		throw new ShortCodeGenerationException(
+				"Unable to generate unique short code."
+		);
+	}
+
+	private boolean hasCustomAlias(CreateLinkRequest request) {
+		return request.alias() != null && !request.alias().isBlank();
 	}
 
 	@Transactional
-	public String redirctLink(String shortCode) {
+	public LinkResponse createLink(
+			CreateLinkRequest request,
+			UserPrincipal principal
+	) {
+
+		String shortCode = resolveShortCode(request);
+
+		Link link = linkMapper.toEntity(request);
+
+		link.assignUser(principal.getUser());
+		link.changeShortCode(shortCode);
+
+		Link savedLink = linkRepository.save(link);
+
+		return linkMapper.toResponse(savedLink, baseUrl);
+	}
+
+	@Transactional
+	public String redirectLink(String shortCode) {
 
 		Link link = linkRepository
 				.findByShortCode(shortCode)
@@ -68,7 +140,7 @@ public class LinkService {
 			);
 		}
 
-		return linkMapper.toResponse(link);
+		return linkMapper.toResponse(link, baseUrl);
 	}
 
 	@Transactional(readOnly = true)
@@ -82,6 +154,6 @@ public class LinkService {
 		);
 
 		return links
-				.map(linkMapper::toResponse);
+				.map(link -> linkMapper.toResponse(link, baseUrl));
 	}
 }

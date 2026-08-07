@@ -5,7 +5,6 @@ import io.github.sahilghorpade.nurl.common.response.ApiResponse;
 import io.github.sahilghorpade.nurl.common.response.ResponseFactory;
 import io.github.sahilghorpade.nurl.link.dto.request.CreateLinkRequest;
 import io.github.sahilghorpade.nurl.link.dto.response.LinkResponse;
-import io.github.sahilghorpade.nurl.link.entity.Link;
 import io.github.sahilghorpade.nurl.link.service.LinkService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -15,11 +14,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 public class LinkController {
@@ -34,9 +31,10 @@ public class LinkController {
 	public ResponseEntity<ApiResponse<LinkResponse>> createLink(
 			@Valid
 			@RequestBody
-			CreateLinkRequest request
+			CreateLinkRequest request,
+			@AuthenticationPrincipal UserPrincipal principal
 	) {
-		LinkResponse response = linkService.createLink(request);
+		LinkResponse response = linkService.createLink(request, principal);
 
 		return ResponseEntity
 				.status(HttpStatus.CREATED)
@@ -51,7 +49,7 @@ public class LinkController {
 			@PathVariable
 			String shortCode
 	) {
-		String originalUrl = linkService.redirctLink(shortCode);
+		String originalUrl = linkService.redirectLink(shortCode);
 
 		return ResponseEntity
 				.status(HttpStatus.FOUND)
@@ -59,7 +57,7 @@ public class LinkController {
 				.build();
 	}
 
-	@GetMapping("link/{id}")
+	@GetMapping("/link/{id}")
 	public ResponseEntity<ApiResponse<LinkResponse>> getAnalysis(
 			@PathVariable
 			Long id,
@@ -92,7 +90,7 @@ public class LinkController {
 				linkService.getLinks(pageable, principal);
 
 		return ResponseEntity
-				.status(HttpStatus.FOUND)
+				.status(HttpStatus.OK)
 				.body(ResponseFactory.success(
 						"Links retrieved successfully",
 						response
