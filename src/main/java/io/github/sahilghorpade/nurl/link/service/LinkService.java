@@ -4,6 +4,7 @@ import io.github.sahilghorpade.nurl.auth.security.UserPrincipal;
 import io.github.sahilghorpade.nurl.common.config.AppProperties;
 import io.github.sahilghorpade.nurl.common.exception.*;
 import io.github.sahilghorpade.nurl.link.dto.request.CreateLinkRequest;
+import io.github.sahilghorpade.nurl.link.dto.request.RestoreLinkRequest;
 import io.github.sahilghorpade.nurl.link.dto.response.LinkResponse;
 import io.github.sahilghorpade.nurl.link.entity.Link;
 import io.github.sahilghorpade.nurl.link.mapper.LinkMapper;
@@ -169,6 +170,20 @@ public class LinkService {
 				.map(link -> linkMapper.toResponse(link, baseUrl));
 	}
 
+	@Transactional(readOnly = true)
+	public Page<LinkResponse> getDeletedLinks(
+			Pageable pageable,
+			UserPrincipal principal
+	) {
+		Page<Link> links =
+				linkRepository
+						.findByUserAndDeletedTrue(principal.getUser(), pageable);
+
+		return links
+				.map(link -> linkMapper.toResponse(link, baseUrl));
+
+	}
+
 	@Transactional
 	public void deleteLink(
 			Long id,
@@ -188,5 +203,57 @@ public class LinkService {
 		}
 
 		link.delete();
+	}
+
+	@Transactional
+	public void restoreLink(
+			Long id,
+			RestoreLinkRequest request,
+			UserPrincipal principal
+	) {
+		Link link = linkRepository
+				.findByIdAndDeletedTrue(id)
+				.orElseThrow(() ->
+						new ResourceNotFoundException(
+								"No such link"
+						)
+				);
+
+		if (!link.getUser().getId().equals(principal.getUser().getId())) {
+			throw new ForbiddenException(
+					"You are not allowed to access this resource"
+			);
+		}
+
+		if (request.expiresAt() != null &&
+		!request.expiresAt().isAfter(Instant.now())) {
+			throw new BadRequestException(
+					"Expiration time must be in the future."
+			);
+		}
+
+		link.restore(request.expiresAt());
+	}
+
+	@Transactional
+	public void deleteLinkPermanently(
+			Long id,
+			UserPrincipal principal
+	) {
+		Link link = linkRepository
+							.findByIdAndDeletedTrue(id)
+							.orElseThrow(() ->
+									new ResourceNotFoundException(
+											"No such link"
+									)
+							);
+
+		if (!link.getUser().getId().equals(principal.getUser().getId())) {
+			throw new ForbiddenException(
+					"You are not allowed to access this resource"
+			);
+		}
+
+		linkRepository.delete(link);
 	}
 }

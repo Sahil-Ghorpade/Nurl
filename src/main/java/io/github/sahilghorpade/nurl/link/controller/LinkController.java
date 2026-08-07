@@ -4,6 +4,7 @@ import io.github.sahilghorpade.nurl.auth.security.UserPrincipal;
 import io.github.sahilghorpade.nurl.common.response.ApiResponse;
 import io.github.sahilghorpade.nurl.common.response.ResponseFactory;
 import io.github.sahilghorpade.nurl.link.dto.request.CreateLinkRequest;
+import io.github.sahilghorpade.nurl.link.dto.request.RestoreLinkRequest;
 import io.github.sahilghorpade.nurl.link.dto.response.LinkResponse;
 import io.github.sahilghorpade.nurl.link.service.LinkService;
 import jakarta.validation.Valid;
@@ -101,6 +102,30 @@ public class LinkController {
 				));
 	}
 
+	// Get all deleted link
+	@GetMapping("links/deleted")
+	public ResponseEntity<ApiResponse<Page<LinkResponse>>> getDeletedLink(
+			@PageableDefault(
+					size = 10,
+					sort = "deletedAt",
+					direction = Sort.Direction.DESC
+			)
+			Pageable pageable,
+
+			@AuthenticationPrincipal
+			UserPrincipal principal
+	) {
+		Page<LinkResponse>  response =
+				linkService.getDeletedLinks(pageable, principal);
+
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(ResponseFactory.success(
+						"Links retrieved successfully",
+						response
+				));
+	}
+
 	//Soft-delete link
 	@DeleteMapping("/link/{id}")
 	public ResponseEntity<Void> deleteLink(
@@ -112,5 +137,33 @@ public class LinkController {
 		return ResponseEntity.
 				noContent().
 				build();
+	}
+
+	//Hard-delete link
+	@DeleteMapping("/link/delete/{id}")
+	public ResponseEntity<Void> deleteLinkPermanently(
+			@PathVariable
+			Long id,
+			@AuthenticationPrincipal UserPrincipal principal
+	) {
+		linkService.deleteLinkPermanently(id, principal);
+
+		return ResponseEntity.
+				noContent().
+				build();
+	}
+
+	//Restore link
+	@PatchMapping("/link/restore/{id}")
+	public ResponseEntity<Void> restoreLink(
+			@PathVariable Long id,
+			@RequestBody RestoreLinkRequest request,
+			@AuthenticationPrincipal UserPrincipal principal
+	) {
+		linkService.restoreLink(id, request, principal);
+
+		return ResponseEntity
+				.noContent()
+				.build();
 	}
 }

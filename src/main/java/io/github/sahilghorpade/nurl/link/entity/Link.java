@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "links")
@@ -90,11 +91,17 @@ public class Link {
 	public void delete() {
 		this.deleted = true;
 		this.deletedAt = Instant.now();
+
+		if (this.expiresAt == null ||
+				this.expiresAt.isAfter(deletedAt.plus(30, ChronoUnit.DAYS))) {
+			this.expiresAt = deletedAt.plus(30, ChronoUnit.DAYS);
+		}
 	}
 
-	public void restore() {
+	public void restore(Instant expiresAt) {
 		this.deleted = false;
 		this.deletedAt = null;
+		this.expiresAt = expiresAt;
 	}
 
 	public void assignUser(User user) {

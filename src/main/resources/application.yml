@@ -33,6 +33,7 @@ jwt:
 
 app:
   base-url: http://localhost:8080
+
   reserved-aliases:
     - login
     - register
@@ -43,3 +44,8 @@ app:
     - link
     - actuator
     - swagger
+
+  cleanup:
+    retention-days: 30
+
+    cron: "0 0 2 * *"
