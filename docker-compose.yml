@@ -1,0 +1,60 @@
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: nurl-postgres
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  nurl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: nurl-app
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION}
+
+      SERVER_PORT: ${SERVER_PORT}
+
+      APP_BASE_URL: ${APP_BASE_URL}
+
+      CLEANUP_RETENTION_DAYS: ${CLEANUP_RETENTION_DAYS}
+      CLEANUP_CRON: ${CLEANUP_CRON}
+
+    ports:
+      - "8080:8080"
+
+
+volumes:
+  postgres_data:
