@@ -112,6 +112,14 @@ public class Link {
 		this.shortCode = shortCode;
 	}
 
+	public void changeOriginalUrl(String originalUrl) {
+		this.originalUrl = originalUrl;
+	}
+
+	public void changeExpiresAt(Instant expiresAt) {
+		this.expiresAt = expiresAt;
+	}
+
 	public Link(String originalUrl) {
 		this.originalUrl = originalUrl;
 	}

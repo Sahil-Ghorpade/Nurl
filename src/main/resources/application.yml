@@ -48,4 +48,5 @@ app:
   cleanup:
     retention-days: 30
 
-    cron: "0 0 2 * *"
+    cron: "0 0 2 * * *"
+#    cron: "*/30 * * * * *"

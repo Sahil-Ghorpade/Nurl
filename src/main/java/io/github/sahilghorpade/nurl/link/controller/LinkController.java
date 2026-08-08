@@ -5,7 +5,9 @@ import io.github.sahilghorpade.nurl.common.response.ApiResponse;
 import io.github.sahilghorpade.nurl.common.response.ResponseFactory;
 import io.github.sahilghorpade.nurl.link.dto.request.CreateLinkRequest;
 import io.github.sahilghorpade.nurl.link.dto.request.RestoreLinkRequest;
+import io.github.sahilghorpade.nurl.link.dto.request.UpdateLinkRequest;
 import io.github.sahilghorpade.nurl.link.dto.response.LinkResponse;
+import io.github.sahilghorpade.nurl.link.qr.QrCodeService;
 import io.github.sahilghorpade.nurl.link.service.LinkService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -23,9 +26,14 @@ import java.net.URI;
 public class LinkController {
 
 	private final LinkService linkService;
+	private final QrCodeService qrCodeService;
 
-	public LinkController(LinkService linkService) {
+	public LinkController(
+			LinkService linkService,
+			QrCodeService qrCodeService
+	) {
 		this.linkService = linkService;
+		this.qrCodeService = qrCodeService;
 	}
 
 	//Create Link
@@ -165,5 +173,41 @@ public class LinkController {
 		return ResponseEntity
 				.noContent()
 				.build();
+	}
+
+	//Update link
+	@PatchMapping("/link/{id}")
+	public ResponseEntity<ApiResponse<LinkResponse>> updateLink(
+			@PathVariable Long id,
+			@Valid @RequestBody UpdateLinkRequest request,
+			@AuthenticationPrincipal UserPrincipal principal
+	) {
+		LinkResponse response = linkService.updateLink(id, request, principal);
+
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(ResponseFactory.success(
+					"Link updated successfully",
+						response
+				));
+	}
+
+	//Generate QR
+	@GetMapping("/link/qr/{id}")
+	public ResponseEntity<byte[]> getQR(
+			@PathVariable Long id,
+			@AuthenticationPrincipal UserPrincipal principal
+	) {
+		byte[] qr =
+				qrCodeService.generateQrCode(id, principal);
+
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.header(
+						"Content-Disposition",
+						"inline; filename=\"qr.jpg\""
+				)
+				.contentType(MediaType.IMAGE_PNG)
+				.body(qr);
 	}
 }

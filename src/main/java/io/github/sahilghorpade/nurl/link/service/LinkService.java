@@ -5,6 +5,7 @@ import io.github.sahilghorpade.nurl.common.config.AppProperties;
 import io.github.sahilghorpade.nurl.common.exception.*;
 import io.github.sahilghorpade.nurl.link.dto.request.CreateLinkRequest;
 import io.github.sahilghorpade.nurl.link.dto.request.RestoreLinkRequest;
+import io.github.sahilghorpade.nurl.link.dto.request.UpdateLinkRequest;
 import io.github.sahilghorpade.nurl.link.dto.response.LinkResponse;
 import io.github.sahilghorpade.nurl.link.entity.Link;
 import io.github.sahilghorpade.nurl.link.mapper.LinkMapper;
@@ -182,6 +183,37 @@ public class LinkService {
 		return links
 				.map(link -> linkMapper.toResponse(link, baseUrl));
 
+	}
+
+	@Transactional
+	public LinkResponse updateLink(
+			Long id,
+			UpdateLinkRequest request,
+			UserPrincipal principal
+	) {
+		Link link = linkRepository
+				.findByIdAndDeletedFalse(id)
+				.orElseThrow(() ->
+						new ResourceNotFoundException(
+								"No such link"
+						)
+				);
+
+		if(!link.getUser().getId().equals(principal.getUser().getId())) {
+			throw new ForbiddenException(
+					"You are not allowed to access this resource"
+			);
+		}
+
+		if (request.expiresAt() != null) {
+			link.changeExpiresAt(request.expiresAt());
+		}
+
+		if (request.originalUrl() != null) {
+			link.changeOriginalUrl(request.originalUrl());
+		}
+
+		return linkMapper.toResponse(link, baseUrl);
 	}
 
 	@Transactional
