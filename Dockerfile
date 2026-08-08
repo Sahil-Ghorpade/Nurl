@@ -11,9 +11,16 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:25-jre
 
+RUN groupadd --system nurl && \
+    useradd --system --gid nurl nurl
+
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
+
+RUN chown nurl:nurl app.jar
+
+USER nurl
 
 EXPOSE 8080
 

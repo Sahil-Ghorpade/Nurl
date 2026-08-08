@@ -1,7 +1,14 @@
 target/
 .git/
+.github/
 .gitignore
+
 .idea/
 *.iml
+.vscode/
+
 .env
+.env.*
+*.log
+
 README.md
