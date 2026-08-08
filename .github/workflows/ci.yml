@@ -75,6 +75,6 @@ jobs:
         run: |
           curl -fsS -X POST \
             -H "Accept: application/json" \
-            "$RENDER_DEPLOY_HOOK?imgURL=docker.io%2Fsahil152003%2Fnurl%3A${{ github.sha }}"
+            "$RENDER_DEPLOY_HOOK&imgURL=docker.io%2Fsahil152003%2Fnurl%3A${{ github.sha }}"
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
