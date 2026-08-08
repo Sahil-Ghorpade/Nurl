@@ -103,7 +103,7 @@ public class SecurityConfig {
 						.requestMatchers("/auth/**")
 						.permitAll()
 
-						.requestMatchers("/api/health")
+						.requestMatchers("/api/health", "/actuator/health")
 						.permitAll()
 
 						.requestMatchers(
