@@ -32,6 +32,7 @@ jwt:
 
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
 
   reserved-aliases:
     - login
