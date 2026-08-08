@@ -122,8 +122,8 @@ public class LinkService {
 						));
 
 		if (link.isExpired()) {
-			throw new LinkExpiredException(
-					"This link is expired."
+			throw new ResourceNotFoundException(
+					"No such link"
 			);
 		}
 

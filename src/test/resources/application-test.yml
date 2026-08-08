@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: Nurl
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/nurl
+    username: postgres
+    password: root
+
+  jpa:
+    show-sql: false
+
+    hibernate:
+      ddl-auto: update
+
+    open-in-view: false
+
+    properties:
+      hibernate:
+        format_sql: true
+        highlight_sql: false
+
+server:
+  port: 0
+
+jwt:
+  secret: test-secret-key-for-nurl-testing-only-12345678901234567890
+  access-token-expiration: 900000
+
+app:
+  base-url: http://localhost:8080
+
+reserved-aliases:
+  - login
+  - register
+  - links
+  - health
+  - admin
+  - api
+  - link
+  - actuator
+  - swagger
+
+cleanup:
+  retention-days: 30
+  cron: "0 0 2 * * *"
+
+logging:
+  level:
+    org.springframework.jdbc: INFO

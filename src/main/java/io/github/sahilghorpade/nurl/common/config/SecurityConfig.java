@@ -55,7 +55,7 @@ public class SecurityConfig {
 						.requestMatchers("/api/health")
 						.permitAll()
 
-						.requestMatchers("/dashboard")
+						.requestMatchers("/link", "/links", "/dashboard")
 						.authenticated()
 
 						.requestMatchers(HttpMethod.GET,"/{shortCode}")
