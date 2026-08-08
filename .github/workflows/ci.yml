@@ -72,6 +72,9 @@ jobs:
 
       - name: Deploy to Render
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
+        run: |
+          curl -fsS -X POST \
+            -H "Accept: application/json" \
+            "$RENDER_DEPLOY_HOOK?imgURL=docker.io%2Fsahil152003%2Fnurl%3A${{ github.sha }}"
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
