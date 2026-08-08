@@ -60,3 +60,9 @@ jobs:
 
       - name: Push Docker image
         run: docker push sahil152003/nurl:latest
+
+      - name: Deploy to Render
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
