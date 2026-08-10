@@ -1,7 +1,6 @@
 package io.github.sahilghorpade.nurl.auth.service;
 
 import io.github.sahilghorpade.nurl.auth.dto.LoginRequest;
-import io.github.sahilghorpade.nurl.auth.dto.LoginResponse;
 import io.github.sahilghorpade.nurl.auth.dto.LoginResult;
 import io.github.sahilghorpade.nurl.auth.entity.RefreshToken;
 import io.github.sahilghorpade.nurl.auth.jwt.JwtService;

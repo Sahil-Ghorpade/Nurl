@@ -1,9 +1,7 @@
 	package io.github.sahilghorpade.nurl.auth.controller;
 
-	import io.github.sahilghorpade.nurl.auth.config.AuthCookieProperties;
 	import io.github.sahilghorpade.nurl.auth.config.AuthTokenProperties;
 	import io.github.sahilghorpade.nurl.auth.dto.LoginRequest;
-	import io.github.sahilghorpade.nurl.auth.dto.LoginResponse;
 	import io.github.sahilghorpade.nurl.auth.dto.LoginResult;
 	import io.github.sahilghorpade.nurl.auth.service.AuthCookieService;
 	import io.github.sahilghorpade.nurl.auth.service.AuthService;
@@ -62,7 +60,7 @@
 		}
 
 		@PostMapping("/login")
-		public ResponseEntity<ApiResponse<LoginResponse>> loginUser(
+		public ResponseEntity<ApiResponse<Void>> loginUser(
 				@Valid
 				@RequestBody
 				LoginRequest loginRequest
@@ -95,10 +93,7 @@
 					.body(
 							ResponseFactory.success(
 									"Login Successful.",
-									new LoginResponse(
-											loginResult.accessToken(),
-											"Bearer"
-									)
+									null
 							)
 					);
 		}
