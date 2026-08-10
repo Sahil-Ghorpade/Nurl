@@ -38,8 +38,12 @@ public class SecurityConfig {
 		CorsConfiguration configuration =
 				new CorsConfiguration();
 
-		configuration.setAllowedOrigins(
-				List.of(frontendUrl)
+		configuration.setAllowedOriginPatterns(
+				List.of(
+						"http://localhost:*",
+						"http://127.0.0.1:*",
+						frontendUrl
+				)
 		);
 
 		configuration.setAllowedMethods(
@@ -48,13 +52,14 @@ public class SecurityConfig {
 						"POST",
 						"PUT",
 						"DELETE",
+						"PATCH",
 						"OPTIONS"
 				)
 		);
 
 		configuration.setAllowedHeaders(
 				List.of(
-						"Content-Type"
+						"*"
 				)
 		);
 
@@ -78,7 +83,7 @@ public class SecurityConfig {
 		http
 				.csrf(csrf -> csrf.disable())
 
-				.cors(cors -> {})
+				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
 				.formLogin(form -> form.disable())
 
@@ -91,6 +96,9 @@ public class SecurityConfig {
 				)
 
 				.authorizeHttpRequests(auth -> auth
+
+						.requestMatchers(HttpMethod.OPTIONS, "/**")
+						.permitAll()
 
 						.requestMatchers("/auth/**")
 						.permitAll()
