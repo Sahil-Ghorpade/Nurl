@@ -5,6 +5,7 @@ import io.github.sahilghorpade.nurl.auth.security.CustomUserDetailsService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -46,6 +47,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             """);
 	}
 
+	private String extractTokenfromCookie(
+			HttpServletRequest request
+	) {
+		Cookie[] cookies = request.getCookies();
+
+		if (cookies == null) {
+			return null;
+		}
+
+		for (Cookie cookie : request.getCookies()) {
+			if ("nurl_access_token".equals(cookie.getName())) {
+				return cookie.getValue();
+			}
+		}
+		return null;
+	}
+
 	@Override
 	protected void doFilterInternal(
 			HttpServletRequest request,
@@ -53,35 +71,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			FilterChain filterChain
 	) throws ServletException, IOException {
 
+		String jwt = extractTokenfromCookie(request);
 
-		String authorizationHeader = request.getHeader("Authorization");
-
-		// No Authorization header
-		if (authorizationHeader == null
-				|| authorizationHeader.isBlank()) {
-
+		if (jwt == null || jwt.isBlank()) {
 			filterChain.doFilter(request, response);
-			return;
-		}
-
-		// Authorization header exists,
-		// but it is not Bearer authentication
-		if (!authorizationHeader.regionMatches(
-				true,
-				0,
-				"Bearer ",
-				0,
-				7
-		)) {
-
-			filterChain.doFilter(request, response);
-			return;
-		}
-
-		String jwt = authorizationHeader.substring(7).trim();
-
-		if (jwt.isBlank()) {
-			sendUnauthorized(response);;
 			return;
 		}
 

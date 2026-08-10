@@ -54,12 +54,11 @@ public class SecurityConfig {
 
 		configuration.setAllowedHeaders(
 				List.of(
-						"Authorization",
 						"Content-Type"
 				)
 		);
 
-		configuration.setAllowCredentials(false);
+		configuration.setAllowCredentials(true);
 
 		UrlBasedCorsConfigurationSource source =
 				new UrlBasedCorsConfigurationSource();
