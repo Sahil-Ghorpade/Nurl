@@ -119,6 +119,18 @@ public class SecurityConfig {
 						)
 						.permitAll()
 
+						.requestMatchers(
+								HttpMethod.POST,
+								"/link/public"
+						)
+						.permitAll()
+
+						.requestMatchers(
+								HttpMethod.GET,
+								"/link/qr/*"
+						)
+						.permitAll()
+
 						.anyRequest()
 						.authenticated()
 				)

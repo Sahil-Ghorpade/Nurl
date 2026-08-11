@@ -8,6 +8,7 @@ import java.util.Set;
 public class AppProperties {
 
 	private String baseUrl;
+	private String frontendUrl;
 	private Set<String> reservedAliases;
 
 	public String getBaseUrl() {
@@ -16,6 +17,14 @@ public class AppProperties {
 
 	public void setBaseUrl(String baseUrl) {
 		this.baseUrl = baseUrl;
+	}
+
+	public String getFrontendUrl() {
+		return frontendUrl;
+	}
+
+	public void setFrontendUrl(String frontendUrl) {
+		this.frontendUrl = frontendUrl;
 	}
 
 	public Set<String> getReservedAliases() {

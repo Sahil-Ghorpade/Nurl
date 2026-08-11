@@ -112,6 +112,22 @@ public class LinkService {
 	}
 
 	@Transactional
+	public LinkResponse createPublicLink(CreateLinkRequest request) {
+		Instant expiresAt = Instant.now().plus(1, java.time.temporal.ChronoUnit.DAYS);
+
+		String shortCode = generateUniqueShortCode();
+
+		Link link = new Link(request.originalUrl());
+		link.setExpiresAt(expiresAt);
+		link.assignUser(null);
+		link.changeShortCode(shortCode);
+
+		Link savedLink = linkRepository.save(link);
+
+		return linkMapper.toResponse(savedLink, baseUrl);
+	}
+
+	@Transactional
 	public String redirectLink(String shortCode) {
 
 		Link link = linkRepository
@@ -122,8 +138,8 @@ public class LinkService {
 						));
 
 		if (link.isExpired()) {
-			throw new ResourceNotFoundException(
-					"No such link"
+			throw new LinkExpiredException(
+					"This link has expired"
 			);
 		}
 
@@ -148,7 +164,7 @@ public class LinkService {
 						)
 				);
 
-		if (!link.getUser().getId().equals(principal.getUser().getId())) {
+		if (link.getUser() == null || !link.getUser().getId().equals(principal.getUser().getId())) {
 			throw new ForbiddenException(
 					"You are not allowed to access this resource"
 			);
@@ -199,7 +215,7 @@ public class LinkService {
 						)
 				);
 
-		if(!link.getUser().getId().equals(principal.getUser().getId())) {
+		if (link.getUser() == null || !link.getUser().getId().equals(principal.getUser().getId())) {
 			throw new ForbiddenException(
 					"You are not allowed to access this resource"
 			);
@@ -228,7 +244,7 @@ public class LinkService {
 					)
 				);
 
-		if (!link.getUser().getId().equals(principal.getUser().getId())) {
+		if (link.getUser() == null || !link.getUser().getId().equals(principal.getUser().getId())) {
 			throw new ForbiddenException(
 					"You are not allowed to access this resource"
 			);
@@ -251,10 +267,14 @@ public class LinkService {
 						)
 				);
 
-		if (!link.getUser().getId().equals(principal.getUser().getId())) {
+		if (link.getUser() == null || !link.getUser().getId().equals(principal.getUser().getId())) {
 			throw new ForbiddenException(
 					"You are not allowed to access this resource"
 			);
+		}
+
+		if (link.isExpired()) {
+			throw new BadRequestException("Expired links cannot be restored.");
 		}
 
 		if (request.expiresAt() != null &&
@@ -280,7 +300,7 @@ public class LinkService {
 									)
 							);
 
-		if (!link.getUser().getId().equals(principal.getUser().getId())) {
+		if (link.getUser() == null || !link.getUser().getId().equals(principal.getUser().getId())) {
 			throw new ForbiddenException(
 					"You are not allowed to access this resource"
 			);

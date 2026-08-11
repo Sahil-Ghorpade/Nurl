@@ -1,6 +1,8 @@
 package io.github.sahilghorpade.nurl.link.controller;
 
 import io.github.sahilghorpade.nurl.auth.security.UserPrincipal;
+import io.github.sahilghorpade.nurl.common.exception.LinkExpiredException;
+import io.github.sahilghorpade.nurl.common.exception.ResourceNotFoundException;
 import io.github.sahilghorpade.nurl.common.response.ApiResponse;
 import io.github.sahilghorpade.nurl.common.response.ResponseFactory;
 import io.github.sahilghorpade.nurl.link.dto.request.CreateLinkRequest;
@@ -10,6 +12,7 @@ import io.github.sahilghorpade.nurl.link.dto.response.LinkResponse;
 import io.github.sahilghorpade.nurl.link.qr.QrCodeService;
 import io.github.sahilghorpade.nurl.link.service.LinkService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -27,6 +30,9 @@ public class LinkController {
 
 	private final LinkService linkService;
 	private final QrCodeService qrCodeService;
+
+	@Value("${app.frontend-url:http://localhost:5173}")
+	private String frontendUrl;
 
 	public LinkController(
 			LinkService linkService,
@@ -54,18 +60,48 @@ public class LinkController {
 				));
 	}
 
+	//Create Public Guest Link
+	@PostMapping("/link/public")
+	public ResponseEntity<ApiResponse<LinkResponse>> createPublicLink(
+			@Valid
+			@RequestBody
+			CreateLinkRequest request
+	) {
+		LinkResponse response = linkService.createPublicLink(request);
+
+		return ResponseEntity
+				.status(HttpStatus.CREATED)
+				.body(ResponseFactory.success(
+						"Public short URL created successfully",
+						response
+				));
+	}
+
 	//Redirect to original link
 	@GetMapping("/{shortCode}")
 	public ResponseEntity<Void> redirectLink(
 			@PathVariable
 			String shortCode
 	) {
-		String originalUrl = linkService.redirectLink(shortCode);
-
-		return ResponseEntity
-				.status(HttpStatus.FOUND)
-				.location(URI.create(originalUrl))
-				.build();
+		try {
+			String originalUrl = linkService.redirectLink(shortCode);
+			return ResponseEntity
+					.status(HttpStatus.FOUND)
+					.location(URI.create(originalUrl))
+					.build();
+		} catch (LinkExpiredException e) {
+			// Redirect browser to frontend expired page
+			return ResponseEntity
+					.status(HttpStatus.FOUND)
+					.location(URI.create(frontendUrl + "/link-expired?code=" + shortCode))
+					.build();
+		} catch (ResourceNotFoundException e) {
+			// Redirect browser to frontend 404 page
+			return ResponseEntity
+					.status(HttpStatus.FOUND)
+					.location(URI.create(frontendUrl + "/" + shortCode))
+					.build();
+		}
 	}
 
 	//Analyze a link
