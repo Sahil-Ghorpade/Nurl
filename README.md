@@ -163,11 +163,11 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    Active[Active Link] -->|DELETE /link/{id}| Deleted[Soft Deleted Link]
-    Deleted -->|PATCH /link/{id}/restore| RestoreCheck{Is Expired?}
-    RestoreCheck -- Yes --> Reject[Throw BadRequestException: Cannot restore expired link]
+    Active[Active Link] -->|"DELETE /link/{id}"| Deleted[Soft Deleted Link]
+    Deleted -->|"PATCH /link/{id}/restore"| RestoreCheck{Is Expired?}
+    RestoreCheck -- Yes --> Reject["Throw BadRequestException: Expired"]
     RestoreCheck -- No --> Restored[Restore to Active Status]
-    Deleted -->|DELETE /link/{id}/permanent| HardDelete[Permanently Removed from DB]
+    Deleted -->|"DELETE /link/{id}/permanent"| HardDelete[Permanently Removed from DB]
 ```
 
 ---
