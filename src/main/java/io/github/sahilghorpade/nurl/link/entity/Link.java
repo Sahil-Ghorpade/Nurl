@@ -51,7 +51,7 @@ public class Link {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(
 			name = "user_id",
-			nullable = false
+			nullable = true
 	)
 	private User user;
 
@@ -98,10 +98,14 @@ public class Link {
 		}
 	}
 
-	public void restore(Instant expiresAt) {
+	public void restore(Instant newExpiresAt) {
 		this.deleted = false;
 		this.deletedAt = null;
-		this.expiresAt = expiresAt;
+		if (newExpiresAt != null) {
+			this.expiresAt = newExpiresAt;
+		} else {
+			this.expiresAt = null;
+		}
 	}
 
 	public void assignUser(User user) {
