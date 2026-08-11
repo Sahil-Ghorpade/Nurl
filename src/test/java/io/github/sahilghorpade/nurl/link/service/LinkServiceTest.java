@@ -555,14 +555,14 @@ class LinkServiceTest {
 		when(linkRepository.findByShortCodeAndDeletedFalse("abc123"))
 				.thenReturn(java.util.Optional.of(link));
 
-		ResourceNotFoundException exception =
+		LinkExpiredException exception =
 				assertThrows(
-						ResourceNotFoundException.class,
+						LinkExpiredException.class,
 						() -> linkService.redirectLink("abc123")
 				);
 
 		assertEquals(
-				"No such link",
+				"This link has expired",
 				exception.getMessage()
 		);
 
@@ -1464,6 +1464,105 @@ class LinkServiceTest {
 
 		verify(linkRepository)
 				.delete(link);
+	}
+
+	@Test
+	void shouldCreatePublicLink() {
+
+		CreateLinkRequest request =
+				new CreateLinkRequest(
+						"https://example.com",
+						null,
+						null
+				);
+
+		Link link =
+				new Link("https://example.com");
+
+		LinkResponse expectedResponse =
+				new LinkResponse(
+						1L,
+						"https://example.com",
+						"pub123",
+						"http://localhost:8080/pub123",
+						Instant.now(),
+						Instant.now().plusSeconds(86400)
+				);
+
+		when(shortCodeGenerator.generate())
+				.thenReturn("pub123");
+
+		when(linkRepository.existsByShortCode("pub123"))
+				.thenReturn(false);
+
+		when(linkRepository.save(any(Link.class)))
+				.thenReturn(link);
+
+		when(linkMapper.toResponse(
+				any(Link.class),
+				eq("http://localhost:8080")
+		)).thenReturn(expectedResponse);
+
+		LinkResponse response =
+				linkService.createPublicLink(request);
+
+		assertSame(expectedResponse, response);
+
+		verify(shortCodeGenerator).generate();
+		verify(linkRepository).existsByShortCode("pub123");
+		verify(linkRepository).save(any(Link.class));
+		verify(linkMapper).toResponse(any(Link.class), eq("http://localhost:8080"));
+	}
+
+	@Test
+	void shouldRestoreLinkForOwner() {
+
+		Long linkId = 1L;
+		User owner = mock(User.class);
+		UUID ownerId = UUID.randomUUID();
+
+		when(owner.getId()).thenReturn(ownerId);
+		when(principal.getUser()).thenReturn(owner);
+
+		Link link = new Link("https://example.com");
+		link.assignUser(owner);
+
+		when(linkRepository.findByIdAndDeletedTrue(linkId))
+				.thenReturn(Optional.of(link));
+
+		RestoreLinkRequest request = new RestoreLinkRequest(null);
+
+		linkService.restoreLink(linkId, request, principal);
+
+		assertFalse(link.isDeleted());
+		verify(linkRepository).findByIdAndDeletedTrue(linkId);
+	}
+
+	@Test
+	void shouldRejectRestoringExpiredLink() {
+
+		Long linkId = 1L;
+		User owner = mock(User.class);
+		UUID ownerId = UUID.randomUUID();
+
+		when(owner.getId()).thenReturn(ownerId);
+		when(principal.getUser()).thenReturn(owner);
+
+		Link link = new Link("https://example.com");
+		link.assignUser(owner);
+		link.changeExpiresAt(Instant.now().minusSeconds(3600));
+
+		when(linkRepository.findByIdAndDeletedTrue(linkId))
+				.thenReturn(Optional.of(link));
+
+		RestoreLinkRequest request = new RestoreLinkRequest(null);
+
+		BadRequestException exception = assertThrows(
+				BadRequestException.class,
+				() -> linkService.restoreLink(linkId, request, principal)
+		);
+
+		assertEquals("Expired links cannot be restored.", exception.getMessage());
 	}
 
 }
